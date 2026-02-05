@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -7,23 +7,21 @@ const Admin = () => {
   const [activeMenu, setActiveMenu] = useState('stats'); 
   const [inventoryFilter, setInventoryFilter] = useState('Tous'); 
   const [vehicles, setVehicles] = useState([]);
-  const [notifications, setNotifications] = useState([]); 
-  const [unreadCount, setUnreadCount] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [lastId, setLastId] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState({ show: false, id: null });
-  const [showClearHistoryModal, setShowClearHistoryModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [editId, setEditId] = useState(null);
-  
-  const audioRef = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'));
 
   const [formData, setFormData] = useState({
     categorie: 'Voiture', marque: '', modele: '', prix: '',
     annee: 2026, valeurCompteur: '', tonnage: '',
     motorisation: 'Diesel', transmission: 'Automatique', description: '', images: []
   });
+
+  // RÉCUPÉRATION DE L'URL API (Vite)
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
@@ -35,55 +33,103 @@ const Admin = () => {
     return { headers: { Authorization: `Bearer ${token}` } };
   };
 
-  // FETCH VEHICLES CORRIGÉ (Suppression de /${id})
   const fetchVehicles = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/cars`);
+      const res = await axios.get(`${API_URL}/api/cars`);
       setVehicles(res.data);
     } catch (err) { console.error("Erreur API:", err); }
   };
+  
+  useEffect(() => { fetchVehicles(); }, []);
 
-  // NOTIFICATIONS CORRIGÉES
-  const fetchNotifications = async () => {
-    try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/notifications`, getAuthHeader());
-      const currentUnread = res.data.filter(n => n.read === false).length;
-      if (currentUnread > unreadCount && activeMenu !== 'alerts') {
-        audioRef.current.play().catch(e => console.log("Lecture audio bloquée"));
-      }
-      setUnreadCount(currentUnread);
-      setNotifications(res.data);
-    } catch (err) { console.error("Erreur Notifications:", err); }
+  const filteredVehicles = vehicles.filter(v => {
+    const matchesCategory = inventoryFilter === 'Tous' || v.categorie === inventoryFilter;
+    const matchesSearch = 
+      v._id.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      v.marque.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      v.modele.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  const totalValue = vehicles.reduce((acc, v) => acc + (Number(v.prix) || 0), 0);
+  const totalViews = vehicles.reduce((acc, v) => acc + (Number(v.views) || 0), 0);
+  const averagePrice = vehicles.length > 0 ? totalValue / vehicles.length : 0;
+  const mostViewed = [...vehicles].sort((a, b) => (b.views || 0) - (a.views || 0))[0];
+
+  const getStatsByCat = (cat) => {
+    const filtered = vehicles.filter(v => v.categorie === cat);
+    const count = filtered.length;
+    const total = vehicles.length;
+    return {
+      count: count,
+      percentage: total > 0 ? (count / total) * 100 : 0,
+      value: filtered.reduce((acc, v) => acc + (Number(v.prix) || 0), 0),
+      views: filtered.reduce((acc, v) => acc + (Number(v.views) || 0), 0)
+    };
   };
 
-  const handleOpenAlerts = async () => {
-    setActiveMenu('alerts');
-    try {
-      await axios.put(`${import.meta.env.VITE_API_URL}/api/notifications/mark-as-read`, {}, getAuthHeader());
-      setUnreadCount(0);
-    } catch (err) { console.error("Erreur marquage lecture:", err); }
+  const statsCars = getStatsByCat('Voiture');
+  const statsTrucks = getStatsByCat('Camion');
+  const statsTractors = getStatsByCat('Tracteur');
+
+  const handleCustomUpload = async (e) => {
+    const files = e.target.files;
+    if (!files.length) return;
+    setIsUploading(true);
+    for (let file of files) {
+      const data = new FormData();
+      data.append("file", file);
+      data.append("upload_preset", "boris_auto_preset"); 
+      try {
+        const res = await fetch(`https://api.cloudinary.com/v1_1/dy06wtnqo/image/upload`, {
+          method: "POST",
+          body: data
+        });
+        const fileData = await res.json();
+        if (fileData.secure_url) {
+          setFormData(prev => ({ ...prev, images: [...prev.images, fileData.secure_url] }));
+        }
+      } catch (err) { console.error(err); }
+    }
+    setIsUploading(false);
   };
 
-  const confirmClearHistory = async () => {
-    try {
-      await axios.delete(`${import.meta.env.VITE_API_URL}/api/notifications/clear-all`, getAuthHeader());
-      setNotifications([]);
-      setUnreadCount(0);
-      setShowClearHistoryModal(false);
-    } catch (err) { console.error("Erreur suppression notifications:", err); }
+  const removeImage = (indexToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, index) => index !== indexToRemove)
+    }));
   };
 
-  // SUBMIT CORRIGÉ (POST & PUT)
+  const handleEdit = (vehicle) => {
+    setEditId(vehicle._id);
+    setFormData({
+      categorie: vehicle.categorie,
+      marque: vehicle.marque,
+      modele: vehicle.modele,
+      prix: vehicle.prix,
+      annee: vehicle.annee,
+      valeurCompteur: vehicle.valeurCompteur,
+      tonnage: vehicle.tonnage || '',
+      motorisation: vehicle.motorisation,
+      transmission: vehicle.transmission,
+      description: vehicle.description,
+      images: vehicle.images
+    });
+    setActiveMenu('publish'); 
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       if (editId) {
-        await axios.put(`${import.meta.env.VITE_API_URL}/api/cars/${editId}`, formData, getAuthHeader());
+        await axios.put(`${API_URL}/api/cars/${editId}`, formData, getAuthHeader());
         setLastId(editId);
       } else {
-        const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/cars/add`, formData, getAuthHeader());
+        const res = await axios.post(`${API_URL}/api/cars/add`, formData, getAuthHeader());
         setLastId(res.data._id);
       }
+      
       setShowSuccessModal(true);
       setEditId(null);
       setFormData({ categorie: 'Voiture', marque: '', modele: '', prix: '', annee: 2026, valeurCompteur: '', tonnage: '', motorisation: 'Diesel', transmission: 'Automatique', description: '', images: [] });
@@ -96,7 +142,7 @@ const Admin = () => {
 
   const confirmDelete = async () => {
     try {
-      await axios.delete(`${import.meta.env.VITE_API_URL}/api/cars/${showDeleteModal.id}`, getAuthHeader());
+      await axios.delete(`${API_URL}/api/cars/${showDeleteModal.id}`, getAuthHeader());
       setVehicles(vehicles.filter(v => v._id !== showDeleteModal.id));
       setShowDeleteModal({ show: false, id: null });
     } catch (err) { 
@@ -105,28 +151,22 @@ const Admin = () => {
     }
   };
 
-  // ... (Le reste du code HTML/JSX et les fonctions Cloudinary restent identiques car ils étaient déjà corrects)
-
   const Icons = {
     Dashboard: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
     Publish: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 4v16m8-8H4" /></svg>,
     Stock: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>,
-    Alerts: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>,
     Search: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>,
-    Value: () => <svg className="w-6 h-6 text-[#184f02]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" strokeWidth="1.5" /><path strokeWidth="1.5" strokeLinecap="round" d="M14.5 9.5c-.3-.5-.8-.8-1.5-.8-1.5 0-2.5 1-2.5 3.3s1 3.3 2.5 3.3c.7 0 1.2-.3 1.5-.8M9 11.5h4M9 13.5h4" /></svg>,
+    Value: () => (
+        <svg className="w-6 h-6 text-[#184f02]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" strokeWidth="1.5" /><path strokeWidth="1.5" strokeLinecap="round" d="M14.5 9.5c-.3-.5-.8-.8-1.5-.8-1.5 0-2.5 1-2.5 3.3s1 3.3 2.5 3.3c.7 0 1.2-.3 1.5-.8M9 11.5h4M9 13.5h4" />
+        </svg>
+    ),
     Eye: () => <svg className="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>,
     Box: () => <svg className="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>,
     Trend: () => <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>,
     Remove: () => <svg className="w-3 h-3" fill="none" stroke="white" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
   };
-// --- CALCUL DES STATS POUR L'ADMIN ---
-const totalVehicles = vehicles.length;
-const totalViews = vehicles.reduce((acc, v) => acc + (v.views || 0), 0);
 
-// VOICI LA LIGNE QUI MANQUE :
-const totalValue = vehicles.reduce((acc, v) => acc + (Number(v.prix) || 0), 0);
-
-const unreadAlerts = notifications.filter(n => !n.read).length;
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex font-['Poppins'] text-slate-900">
       
@@ -146,29 +186,13 @@ const unreadAlerts = notifications.filter(n => !n.read).length;
             {[
               { id: 'stats', label: 'Dashboard', icon: <Icons.Dashboard /> },
               { id: 'publish', label: 'Publication', icon: <Icons.Publish /> },
-              { id: 'assets', label: 'Inventaire', icon: <Icons.Stock /> },
-              { id: 'alerts', label: 'Alertes', icon: <Icons.Alerts /> }
+              { id: 'assets', label: 'Inventaire', icon: <Icons.Stock /> }
             ].map((item) => (
-              <button 
-                key={item.id} 
-                onClick={() => {
-                  if (item.id === 'alerts') {
-                    handleOpenAlerts();
-                  } else {
-                    setActiveMenu(item.id);
-                  }
-                }} 
-                className={`w-full flex items-center justify-between py-3 text-[11px] font-bold uppercase tracking-widest transition-all rounded-xl px-4 ${activeMenu === item.id ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
-              >
-                <div className="flex items-center gap-4">
-                    {item.icon} {item.label}
-                </div>
-                
-                {item.id === 'alerts' && unreadCount > 0 && activeMenu !== 'alerts' && (
-                  <span className="flex h-5 min-w-[20px] px-1 items-center justify-center rounded-full bg-red-600 text-[10px] text-white animate-bounce shadow-lg shadow-red-200">
-                    {unreadCount}
-                  </span>
-                )}
+              <button key={item.id} onClick={() => { 
+                  setActiveMenu(item.id);
+                  if(item.id !== 'publish') { setEditId(null); setFormData({categorie: 'Voiture', marque: '', modele: '', prix: '', annee: 2026, valeurCompteur: '', tonnage: '', motorisation: 'Diesel', transmission: 'Automatique', description: '', images: [] }); }
+                }} className={`w-full flex items-center gap-4 py-3 text-[11px] font-bold uppercase tracking-widest transition-all rounded-xl px-4 ${activeMenu === item.id ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
+                {item.icon} {item.label}
               </button>
             ))}
           </div>
@@ -182,6 +206,7 @@ const unreadAlerts = notifications.filter(n => !n.read).length;
       </aside>
 
       <main className="flex-1 ml-64 p-12">
+        
         {activeMenu === 'stats' && (
           <div className="space-y-10 animate-in fade-in duration-500">
             <div className="grid grid-cols-4 gap-6">
@@ -246,36 +271,13 @@ const unreadAlerts = notifications.filter(n => !n.read).length;
           </div>
         )}
 
-        {activeMenu === 'alerts' && (
-          <div className="space-y-6 animate-in fade-in duration-500">
-             <div className="flex justify-between items-center mb-10 border-l-4 border-green-500 pl-4">
-               <h2 className="text-[12px] font-bold text-slate-900 uppercase tracking-widest">Historique WhatsApp</h2>
-               <button onClick={() => setShowClearHistoryModal(true)} className="text-[9px] bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-sm border border-red-100">Vider l'historique</button>
-             </div>
-             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <table className="w-full text-left">
-                  <thead className="bg-slate-50 text-[9px] font-bold text-slate-600 uppercase tracking-widest border-b border-slate-100">
-                    <tr><th className="p-6">Date & Heure</th><th className="p-6">Provenance</th><th className="p-6">Action</th></tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-[12px]">
-                    {notifications.map((n) => (
-                      <tr key={n._id} className={`hover:bg-slate-50/50 transition-colors ${!n.read ? 'bg-green-50/30' : ''}`}>
-                        <td className="p-6 font-medium">{new Date(n.date).toLocaleString('fr-FR')}{!n.read && <span className="ml-2 text-[8px] bg-red-500 text-white px-1 rounded">NEW</span>}</td>
-                        <td className="p-6 italic text-slate-500">{n.pageOrigin}</td>
-                        <td className="p-6"><span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-bold uppercase">Clic WhatsApp</span></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-             </div>
-          </div>
-        )}
-
         {activeMenu === 'publish' && (
           <div className="max-w-4xl animate-in fade-in duration-500">
-            <h2 className="text-[12px] font-bold text-slate-900 uppercase tracking-widest mb-10 border-l-4 border-[#184f02] pl-4">{editId ? `Modifier : ${formData.marque} ${formData.modele}` : "Ajout de Matériel"}</h2>
+            <h2 className="text-[12px] font-bold text-slate-900 uppercase tracking-widest mb-10 border-l-4 border-[#184f02] pl-4">
+                {editId ? `Modifier : ${formData.marque} ${formData.modele}` : "Ajout de Matériel"}
+            </h2>
             <form onSubmit={handleSubmit} className="bg-white p-10 rounded-xl shadow-sm border border-slate-100 space-y-8">
-               <div className="grid grid-cols-4 gap-6">
+                <div className="grid grid-cols-4 gap-6">
                 <select value={formData.categorie} onChange={(e) => setFormData({...formData, categorie: e.target.value})} className="p-2 border-b border-slate-200 text-[13px] outline-none font-bold uppercase bg-transparent">
                   <option value="Voiture">Voiture</option><option value="Camion">Camion</option><option value="Tracteur">Tracteur</option>
                 </select>
@@ -290,16 +292,20 @@ const unreadAlerts = notifications.filter(n => !n.read).length;
                   <input type="file" multiple className="hidden" onChange={handleCustomUpload} />
                 </label>
               </div>
+
               {formData.images.length > 0 && (
                 <div className="grid grid-cols-6 gap-4 p-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">
                   {formData.images.map((url, index) => (
                     <div key={index} className="relative group aspect-video">
                       <img src={url} alt="" className="w-full h-full object-cover rounded-lg shadow-sm border border-white" />
-                      <button type="button" onClick={() => removeImage(index)} className="absolute -top-2 -right-2 bg-red-600 text-white p-1 rounded-full shadow-lg opacity-100 transition-opacity"><Icons.Remove /></button>
+                      <button type="button" onClick={() => removeImage(index)} className="absolute -top-2 -right-2 bg-red-600 text-white p-1 rounded-full shadow-lg opacity-100 transition-opacity">
+                        <Icons.Remove />
+                      </button>
                     </div>
                   ))}
                 </div>
               )}
+
               <div className="grid grid-cols-2 gap-10">
                 <input type="text" placeholder="Marque" value={formData.marque} onChange={(e) => setFormData({...formData, marque: e.target.value})} className="p-2 border-b border-slate-200 text-[13px] outline-none font-bold" required />
                 <input type="text" placeholder="Modèle" value={formData.modele} onChange={(e) => setFormData({...formData, modele: e.target.value})} className="p-2 border-b border-slate-200 text-[13px] outline-none font-bold" required />
@@ -310,7 +316,9 @@ const unreadAlerts = notifications.filter(n => !n.read).length;
                 <input type="number" placeholder="Compteur" value={formData.valeurCompteur} onChange={(e) => setFormData({...formData, valeurCompteur: e.target.value})} className="p-2 border-b border-slate-200 text-[13px] outline-none font-bold" />
               </div>
               <textarea placeholder="Description technique..." value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full p-4 border border-slate-100 rounded-lg text-[13px] h-32 outline-none font-medium bg-slate-50"></textarea>
-              <button type="submit" className="w-full bg-slate-900 text-white py-5 rounded-lg font-bold text-[10px] uppercase tracking-[0.5em] hover:bg-black transition-all">{editId ? "Mettre à jour l'actif" : "Enregistrer l'actif"}</button>
+              <button type="submit" className="w-full bg-slate-900 text-white py-5 rounded-lg font-bold text-[10px] uppercase tracking-[0.5em] hover:bg-black transition-all">
+                {editId ? "Mettre à jour l'actif" : "Enregistrer l'actif"}
+              </button>
             </form>
           </div>
         )}
@@ -321,21 +329,21 @@ const unreadAlerts = notifications.filter(n => !n.read).length;
               <div className="space-y-4">
                 <div className="flex gap-4">
                   {['Tous', 'Voiture', 'Camion', 'Tracteur'].map((cat) => (
-                    <button key={cat} onClick={() => setInventoryFilter(cat)} className={`text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-lg transition-all ${inventoryFilter === cat ? 'bg-slate-900 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}>{cat === 'Tous' ? 'Tout' : cat + 's'}</button>
+                    <button key={cat} onClick={() => setInventoryFilter(cat)} className={`text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-lg transition-all ${inventoryFilter === cat ? 'bg-slate-900 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}>
+                      {cat === 'Tous' ? 'Tout' : cat + 's'}
+                    </button>
                   ))}
                 </div>
-                <p className="text-[11px] font-bold text-slate-900 uppercase tracking-tight">{filteredVehicles.length} {filteredVehicles.length > 1 ? 'véhicules trouvés' : 'véhicule trouvé'}</p>
+                <p className="text-[11px] font-bold text-slate-900 uppercase tracking-tight">
+                  {filteredVehicles.length} {filteredVehicles.length > 1 ? 'véhicules trouvés' : 'véhicule trouvé'}
+                </p>
               </div>
               <div className="relative w-80">
                 <div className="absolute inset-y-0 left-4 flex items-center text-slate-400"><Icons.Search /></div>
                 <input type="text" placeholder="Rechercher..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-white border border-slate-200 rounded-xl py-3 pl-12 pr-10 text-[11px] font-bold outline-none focus:border-[#184f02] shadow-sm" />
-                {searchTerm && (
-                  <button onClick={() => setSearchTerm('')} className="absolute inset-y-0 right-4 flex items-center text-slate-400 hover:text-red-500">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                  </button>
-                )}
               </div>
             </div>
+
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
               <table className="w-full text-left">
                 <thead className="bg-slate-50 text-[9px] font-bold text-slate-600 uppercase tracking-widest border-b border-slate-100">
@@ -364,11 +372,12 @@ const unreadAlerts = notifications.filter(n => !n.read).length;
         )}
       </main>
 
-      {/* --- MODAUX --- */}
       {showSuccessModal && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl border border-slate-100">
-            <h3 className="text-lg font-bold text-slate-900 mb-6 uppercase tracking-widest">{editId ? "Mise à jour réussie" : "Publication Validée"}</h3>
+            <h3 className="text-lg font-bold text-slate-900 mb-6 uppercase tracking-widest">
+                {editId ? "Mise à jour réussie" : "Publication Validée"}
+            </h3>
             <div className="space-y-3">
               <button onClick={() => { setShowSuccessModal(false); setActiveMenu('publish'); setEditId(null); }} className="w-full bg-slate-900 text-white py-3 rounded-lg font-bold text-[11px] uppercase tracking-widest">Nouveau Matériel</button>
               <button onClick={() => navigate(`/car/${lastId}`)} className="w-full bg-green-50 text-[#184f02] py-3 rounded-lg font-bold text-[11px] uppercase border border-green-100">Voir l'annonce</button>
@@ -385,22 +394,6 @@ const unreadAlerts = notifications.filter(n => !n.read).length;
             <div className="flex gap-4">
               <button onClick={() => setShowDeleteModal({ show: false, id: null })} className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-lg font-bold text-[11px] uppercase">Annuler</button>
               <button onClick={confirmDelete} className="flex-1 py-3 bg-red-600 text-white rounded-lg font-bold text-[11px] uppercase shadow-lg shadow-red-200">Confirmer</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showClearHistoryModal && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl border border-slate-100 animate-in zoom-in duration-200">
-            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-            </div>
-            <h3 className="text-md font-bold text-slate-900 text-center uppercase tracking-wider mb-2">Vider l'historique ?</h3>
-            <p className="text-[11px] text-slate-500 text-center mb-8 font-medium">Cette action supprimera définitivement toutes les alertes WhatsApp enregistrées pour Emile Auto.</p>
-            <div className="flex gap-3">
-              <button onClick={() => setShowClearHistoryModal(false)} className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold text-[10px] uppercase tracking-widest">Annuler</button>
-              <button onClick={confirmClearHistory} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-red-100">Vider tout</button>
             </div>
           </div>
         </div>
