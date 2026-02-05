@@ -7,7 +7,7 @@ import Home from './pages/Home';
 import Catalogue from './pages/Catalogue';
 import CarDetail from './pages/CarDetail';
 import Admin from './pages/Admin';
-import Login from './pages/Login';
+import Login from './pages/login';
 
 // --- COMPOSANT : PROTECTION DES ROUTES ---
 const ProtectedRoute = ({ children }) => {
