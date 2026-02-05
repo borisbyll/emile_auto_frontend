@@ -17,7 +17,7 @@ const Admin = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [editId, setEditId] = useState(null);
   
-  // NOUVEAUX ÉTATS POUR LA SÉLECTION MULTIPLE
+  // ÉTATS POUR LA SÉLECTION MULTIPLE
   const [selectedIds, setSelectedIds] = useState([]);
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
 
@@ -93,7 +93,6 @@ const Admin = () => {
     return matchesCategory && matchesSearch;
   });
 
-  // LOGIQUE DE SÉLECTION
   const handleSelectOne = (id) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
@@ -219,6 +218,8 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex font-['Poppins'] text-slate-900">
+      
+      {/* MENU LATÉRAL (GARDÉ TEL QUEL) */}
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col fixed h-full shadow-sm z-50">
         <div className="p-8 flex flex-col items-center border-b border-slate-50">
           <img src="/images/logo.png" alt="Logo" className="w-42 h-auto mb-4" />
@@ -250,6 +251,7 @@ const Admin = () => {
         </div>
       </aside>
 
+      {/* ZONE DE CONTENU PRINCIPAL (NAVBAR DU HAUT SUPPRIMÉE) */}
       <main className="flex-1 ml-64 p-12">
         {activeMenu === 'stats' && (
           <div className="space-y-10 animate-in fade-in duration-500">
@@ -377,8 +379,6 @@ const Admin = () => {
                 </div>
                 <div className="flex items-center gap-4">
                   <p className="text-[11px] font-bold text-slate-900 uppercase tracking-tight">{filteredVehicles.length} {filteredVehicles.length > 1 ? 'véhicules trouvés' : 'véhicule trouvé'}</p>
-                  
-                  {/* BOUTON SUPPRESSION GROUPÉE */}
                   {selectedIds.length > 0 && (
                     <button onClick={() => setShowBulkDeleteModal(true)} className="bg-red-600 text-white text-[9px] px-3 py-1.5 rounded-lg font-bold uppercase tracking-widest animate-pulse shadow-lg shadow-red-200">
                       Supprimer la sélection ({selectedIds.length})
@@ -443,7 +443,7 @@ const Admin = () => {
         )}
       </main>
 
-      {/* MODAL SUPPRESSION MULTIPLE */}
+      {/* MODAUX */}
       {showBulkDeleteModal && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl border border-slate-100 text-center animate-in zoom-in duration-200">
@@ -451,7 +451,7 @@ const Admin = () => {
                 <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
             </div>
             <h3 className="text-md font-bold text-slate-900 uppercase tracking-wider mb-2">Supprimer la sélection ?</h3>
-            <p className="text-[11px] text-slate-500 mb-8 font-medium">Vous allez retirer {selectedIds.length} publications de l'inventaire Emile Auto. Cette action est irréversible.</p>
+            <p className="text-[11px] text-slate-500 mb-8 font-medium">Vous allez retirer {selectedIds.length} publications de l'inventaire Emile Auto.</p>
             <div className="flex gap-3">
               <button onClick={() => setShowBulkDeleteModal(false)} className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold text-[10px] uppercase tracking-widest">Annuler</button>
               <button onClick={confirmBulkDelete} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-red-100">Confirmer</button>
@@ -460,7 +460,6 @@ const Admin = () => {
         </div>
       )}
 
-      {/* AUTRES MODAUX (RÉTABLIS À L'IDENTIQUE) */}
       {showSuccessModal && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl border border-slate-100">
@@ -493,7 +492,7 @@ const Admin = () => {
                 <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
             </div>
             <h3 className="text-md font-bold text-slate-900 text-center uppercase tracking-wider mb-2">Vider l'historique ?</h3>
-            <p className="text-[11px] text-slate-500 text-center mb-8 font-medium">Cette action supprimera définitivement toutes les alertes WhatsApp enregistrées pour Emile Auto.</p>
+            <p className="text-[11px] text-slate-500 text-center mb-8 font-medium">Cette action supprimera définitivement toutes les alertes WhatsApp enregistrées.</p>
             <div className="flex gap-3">
               <button onClick={() => setShowClearHistoryModal(false)} className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold text-[10px] uppercase tracking-widest">Annuler</button>
               <button onClick={confirmClearHistory} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-red-100">Vider tout</button>
