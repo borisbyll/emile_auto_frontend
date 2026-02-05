@@ -9,6 +9,10 @@ import CarDetail from './pages/CarDetail';
 import Admin from './pages/Admin';
 import Login from './pages/login';
 
+// --- CONFIGURATION DE L'API ---
+// Cette ligne récupère l'URL de ton backend Render configurée dans Vercel
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 // --- COMPOSANT : PROTECTION DES ROUTES ---
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('adminToken');
@@ -18,11 +22,10 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// --- COMPOSANT : BOUTON WHATSAPP MODERNE (AVEC NOTIFICATION CORRIGÉE) ---
+// --- COMPOSANT : BOUTON WHATSAPP MODERNE ---
 const FloatingWhatsApp = () => {
   const location = useLocation();
   
-  // Ne pas afficher le bouton sur l'admin ou le login
   const hideWhatsApp = location.pathname.startsWith('/Admin') || location.pathname === '/login';
   
   if (hideWhatsApp) return null;
@@ -33,25 +36,21 @@ const FloatingWhatsApp = () => {
   const handleWhatsAppClick = async (e) => {
     e.preventDefault();
 
-    // --- LOGIQUE DE PROVENANCE AMÉLIORÉE ---
     let provenance = "Page d'accueil";
     if (location.pathname.startsWith('/Car/')) {
-      // Si on est sur une fiche, on essaie de récupérer le nom via le titre de la page
-      // (CarDetail met généralement à jour document.title)
       provenance = document.title.replace(" | Emile Auto", "") || "Fiche Véhicule";
     } else if (location.pathname === '/Catalogue') {
       provenance = "Catalogue Complet";
     }
 
     try {
-      // On envoie le signal au serveur avec le nom de la page au lieu de l'URL
-      await axios.post('http://localhost:5000/api/notifications/add', {
+      // ✅ Correction : Utilisation de API_URL au lieu de localhost
+      await axios.post(`${API_URL}/api/notifications/add`, {
         page: provenance 
       });
     } catch (err) {
       console.error("Erreur notification:", err);
     } finally {
-      // On ouvre WhatsApp quoi qu'il arrive
       window.open(`https://wa.me/${whatsappNumber}?text=${message}`, "_blank");
     }
   };
@@ -93,15 +92,15 @@ const Navbar = () => {
         
         <div className="hidden md:flex gap-10 items-center">
           <Link to="/" className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 transition-colors">Accueil</Link>
-          <Link to="/catalogue" className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 transition-colors">Inventaire</Link>
-          <Link to="/admin" className="px-5 py-2 bg-slate-50 text-slate-900 rounded-full text-[9px] font-black uppercase tracking-widest border border-slate-200 hover:bg-slate-900 hover:text-white transition-all">Espace Admin</Link>
+          <Link to="/Catalogue" className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 transition-colors">Inventaire</Link>
+          <Link to="/Admin" className="px-5 py-2 bg-slate-50 text-slate-900 rounded-full text-[9px] font-black uppercase tracking-widest border border-slate-200 hover:bg-slate-900 hover:text-white transition-all">Espace Admin</Link>
         </div>
       </div>
     </nav>
   );
 };
 
-// --- CONFIGURATION PRINCIPALE DE L'APPLICATION ---
+// --- CONFIGURATION PRINCIPALE ---
 function App() {
   return (
     <Router>
