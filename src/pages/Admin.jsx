@@ -119,7 +119,14 @@ const Admin = () => {
     Trend: () => <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>,
     Remove: () => <svg className="w-3 h-3" fill="none" stroke="white" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
   };
+// --- CALCUL DES STATS POUR L'ADMIN ---
+const totalVehicles = vehicles.length;
+const totalViews = vehicles.reduce((acc, v) => acc + (v.views || 0), 0);
 
+// VOICI LA LIGNE QUI MANQUE :
+const totalValue = vehicles.reduce((acc, v) => acc + (Number(v.prix) || 0), 0);
+
+const unreadAlerts = notifications.filter(n => !n.read).length;
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex font-['Poppins'] text-slate-900">
       
