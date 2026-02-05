@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import axios from 'axios';
+import Layout from './components/layout'; // Vérifie le chemin !
+
 
 // Importation de tes composants
 import Home from './pages/Home';
@@ -8,6 +10,7 @@ import Catalogue from './pages/Catalogue';
 import CarDetail from './pages/CarDetail';
 import Admin from './pages/Admin';
 import Login from './pages/login';
+
 
 // --- CONFIGURATION DE L'API ---
 // Cette ligne récupère l'URL de ton backend Render configurée dans Vercel
@@ -106,7 +109,7 @@ function App() {
     <Router>
       <div className="relative min-h-screen selection:bg-amber-100 selection:text-amber-900">
         <Navbar />
-        
+      <Layout>
         <Routes>
           <Route index element={<Home />} />
           <Route path="/" element={<Home />} />
@@ -125,6 +128,7 @@ function App() {
           
           <Route path="*" element={<Home />} />
         </Routes>
+      </Layout>
 
         <FloatingWhatsApp />
       </div>
