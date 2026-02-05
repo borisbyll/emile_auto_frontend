@@ -74,9 +74,9 @@ const FloatingWhatsApp = () => {
 };
 
 // --- COMPOSANT : NAVBAR EMILE AUTO ---
-//const Navbar = () => {
-  //const location = useLocation();
-  //const hideNavbar = location.pathname.startsWith('/Admin') || location.pathname === '/login';
+const Navbar = () => {
+  const location = useLocation();
+  const hideNavbar = location.pathname.startsWith('/Admin') || location.pathname === '/login';
   
   if (hideNavbar) return null;
 
