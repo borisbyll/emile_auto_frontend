@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import axios from 'axios';
 
 // Importation de tes composants
@@ -21,11 +21,12 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// --- COMPOSANT : BOUTON WHATSAPP MODERNE ---
+// --- COMPOSANT : BOUTON WHATSAPP ---
 const FloatingWhatsApp = () => {
   const location = useLocation();
   
-  const hideWhatsApp = location.pathname.startsWith('/Admin') || location.pathname === '/login';
+  // Cache le bouton sur Admin et Login
+  const hideWhatsApp = location.pathname.toLowerCase().startsWith('/admin') || location.pathname === '/login';
   
   if (hideWhatsApp) return null;
 
@@ -37,7 +38,7 @@ const FloatingWhatsApp = () => {
 
     let provenance = "Page d'accueil";
     if (location.pathname.startsWith('/Car/')) {
-      provenance = document.title.replace(" | Emile Auto", "") || "Fiche Véhicule";
+      provenance = "Fiche Véhicule";
     } else if (location.pathname === '/Catalogue') {
       provenance = "Catalogue Complet";
     }
@@ -59,7 +60,7 @@ const FloatingWhatsApp = () => {
       className="fixed bottom-8 right-8 z-[100] flex items-center group bg-transparent border-none p-0 outline-none cursor-pointer"
     >
       <span className="absolute inline-flex h-full w-full rounded-full bg-[#25D366] opacity-20 animate-ping"></span>
-      <div className="relative bg-[#25D366] text-white p-4 rounded-2xl shadow-[0_10px_30px_rgba(37,211,102,0.3)] hover:scale-110 transition-all duration-300 flex items-center">
+      <div className="relative bg-[#25D366] text-white p-4 rounded-2xl shadow-lg hover:scale-110 transition-all duration-300 flex items-center">
         <span className="max-w-0 overflow-hidden group-hover:max-w-xs group-hover:ml-3 transition-all duration-500 font-bold text-[11px] uppercase tracking-[0.2em] whitespace-nowrap">
           Conseiller en ligne
         </span>
@@ -76,15 +77,12 @@ function App() {
   return (
     <Router>
       <div className="relative min-h-screen selection:bg-amber-100 selection:text-amber-900">
-        {/* La Navbar a été supprimée d'ici pour laisser toute la place au contenu et à la Sidebar Admin */}
-        
         <Routes>
           <Route index element={<Home />} />
           <Route path="/" element={<Home />} />
           <Route path="/Catalogue" element={<Catalogue />} />
           <Route path="/Car/:id" element={<CarDetail />} />
           <Route path="/login" element={<Login />} />
-          
           <Route 
             path="/admin/*" 
             element={
@@ -93,10 +91,8 @@ function App() {
               </ProtectedRoute>
             } 
           />
-          
           <Route path="*" element={<Home />} />
         </Routes>
-
         <FloatingWhatsApp />
       </div>
     </Router>
