@@ -23,9 +23,9 @@ const CarDetail = () => {
   useEffect(() => {
     const getData = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/cars/${id}`);
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/cars/${id}`);
         setCar(res.data);
-        const all = await axios.get(`${import.meta.env.VITE_API_URL}/cars`);
+        const all = await axios.get(`${import.meta.env.VITE_API_URL}/api/cars`);
         setOthers(all.data.filter(c => c._id !== id).slice(0, 3));
       } catch (e) { 
         console.error("Erreur Emile Auto:", e); 

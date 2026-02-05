@@ -26,7 +26,7 @@ const Home = () => {
     const fetchRecent = async () => {
       try {
         // Suppression du /${id} qui causait l'erreur
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/cars`);
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/cars`);
         const latest = res.data
           .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
           .slice(0, 3);

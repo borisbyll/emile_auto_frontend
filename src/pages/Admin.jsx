@@ -38,7 +38,7 @@ const Admin = () => {
   // FETCH VEHICLES CORRIGÉ (Suppression de /${id})
   const fetchVehicles = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/cars`);
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/cars`);
       setVehicles(res.data);
     } catch (err) { console.error("Erreur API:", err); }
   };
@@ -46,7 +46,7 @@ const Admin = () => {
   // NOTIFICATIONS CORRIGÉES
   const fetchNotifications = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/notifications`, getAuthHeader());
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/notifications`, getAuthHeader());
       const currentUnread = res.data.filter(n => n.read === false).length;
       if (currentUnread > unreadCount && activeMenu !== 'alerts') {
         audioRef.current.play().catch(e => console.log("Lecture audio bloquée"));
@@ -59,14 +59,14 @@ const Admin = () => {
   const handleOpenAlerts = async () => {
     setActiveMenu('alerts');
     try {
-      await axios.put(`${import.meta.env.VITE_API_URL}/notifications/mark-as-read`, {}, getAuthHeader());
+      await axios.put(`${import.meta.env.VITE_API_URL}/api/notifications/mark-as-read`, {}, getAuthHeader());
       setUnreadCount(0);
     } catch (err) { console.error("Erreur marquage lecture:", err); }
   };
 
   const confirmClearHistory = async () => {
     try {
-      await axios.delete(`${import.meta.env.VITE_API_URL}/notifications/clear-all`, getAuthHeader());
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/notifications/clear-all`, getAuthHeader());
       setNotifications([]);
       setUnreadCount(0);
       setShowClearHistoryModal(false);
@@ -78,10 +78,10 @@ const Admin = () => {
     e.preventDefault();
     try {
       if (editId) {
-        await axios.put(`${import.meta.env.VITE_API_URL}/cars/${editId}`, formData, getAuthHeader());
+        await axios.put(`${import.meta.env.VITE_API_URL}/api/cars/${editId}`, formData, getAuthHeader());
         setLastId(editId);
       } else {
-        const res = await axios.post(`${import.meta.env.VITE_API_URL}/cars/add`, formData, getAuthHeader());
+        const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/cars/add`, formData, getAuthHeader());
         setLastId(res.data._id);
       }
       setShowSuccessModal(true);
@@ -96,7 +96,7 @@ const Admin = () => {
 
   const confirmDelete = async () => {
     try {
-      await axios.delete(`${import.meta.env.VITE_API_URL}/cars/${showDeleteModal.id}`, getAuthHeader());
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/cars/${showDeleteModal.id}`, getAuthHeader());
       setVehicles(vehicles.filter(v => v._id !== showDeleteModal.id));
       setShowDeleteModal({ show: false, id: null });
     } catch (err) { 

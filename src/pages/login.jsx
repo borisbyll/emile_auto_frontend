@@ -15,7 +15,7 @@ const Login = () => {
 
     try {
       // CORRECTION : Utilisation de la variable d'environnement
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/login`, credentials);
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/login`, credentials);
 
       if (response.data.token) {
         localStorage.setItem('adminToken', response.data.token);
