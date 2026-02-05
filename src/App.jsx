@@ -10,7 +10,6 @@ import Admin from './pages/Admin';
 import Login from './pages/login';
 
 // --- CONFIGURATION DE L'API ---
-// Cette ligne récupère l'URL de ton backend Render configurée dans Vercel
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 // --- COMPOSANT : PROTECTION DES ROUTES ---
@@ -44,7 +43,6 @@ const FloatingWhatsApp = () => {
     }
 
     try {
-      // ✅ Correction : Utilisation de API_URL au lieu de localhost
       await axios.post(`${API_URL}/api/notifications/add`, {
         page: provenance 
       });
@@ -73,39 +71,12 @@ const FloatingWhatsApp = () => {
   );
 };
 
-// --- COMPOSANT : NAVBAR EMILE AUTO ---
-const Navbar = () => {
-  const location = useLocation();
-  const hideNavbar = location.pathname.startsWith('/Admin') || location.pathname === '/login';
-  
-  if (hideNavbar) return null;
-
-  return (
-    <nav className="bg-white/90 backdrop-blur-md border-b border-slate-100 sticky top-0 z-[90]">
-      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-black text-xs group-hover:bg-amber-600 transition-colors">E</div>
-          <span className="text-xl font-black tracking-tighter uppercase text-slate-900">
-            Emile <span className="text-amber-600">Auto</span>
-          </span>
-        </Link>
-        
-        <div className="hidden md:flex gap-10 items-center">
-          <Link to="/" className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 transition-colors">Accueil</Link>
-          <Link to="/Catalogue" className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 transition-colors">Inventaire</Link>
-          <Link to="/Admin" className="px-5 py-2 bg-slate-50 text-slate-900 rounded-full text-[9px] font-black uppercase tracking-widest border border-slate-200 hover:bg-slate-900 hover:text-white transition-all">Espace Admin</Link>
-        </div>
-      </div>
-    </nav>
-  );
-};
-
 // --- CONFIGURATION PRINCIPALE ---
 function App() {
   return (
     <Router>
       <div className="relative min-h-screen selection:bg-amber-100 selection:text-amber-900">
-        <Navbar />
+        {/* La Navbar a été supprimée d'ici pour laisser toute la place au contenu et à la Sidebar Admin */}
         
         <Routes>
           <Route index element={<Home />} />
