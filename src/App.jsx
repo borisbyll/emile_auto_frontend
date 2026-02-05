@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import axios from 'axios';
-import Layout from './components/Layout'; // Vérifie que le L est majuscule
+import Layout from './components/layout'; // Vérifie que le L est majuscule
 
 // Importation des composants
 import Home from './pages/Home';
