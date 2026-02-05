@@ -17,6 +17,10 @@ const Admin = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [editId, setEditId] = useState(null);
   
+  // NOUVEAUX ÉTATS POUR LA SÉLECTION MULTIPLE
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+
   const audioRef = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'));
 
   const [formData, setFormData] = useState({
@@ -25,7 +29,6 @@ const Admin = () => {
     motorisation: 'Diesel', transmission: 'Automatique', description: '', images: []
   });
 
-  // CONFIGURATION DÉPLOIEMENT
   const API_URL = import.meta.env.VITE_API_URL;
 
   const handleLogout = () => {
@@ -71,9 +74,7 @@ const Admin = () => {
       setNotifications([]);
       setUnreadCount(0);
       setShowClearHistoryModal(false);
-    } catch (err) {
-      console.error("Erreur suppression notifications:", err);
-    }
+    } catch (err) { console.error("Erreur suppression notifications:", err); }
   };
 
   useEffect(() => { 
@@ -91,6 +92,32 @@ const Admin = () => {
       v.modele.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCategory && matchesSearch;
   });
+
+  // LOGIQUE DE SÉLECTION
+  const handleSelectOne = (id) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.length === filteredVehicles.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredVehicles.map(v => v._id));
+    }
+  };
+
+  const confirmBulkDelete = async () => {
+    try {
+      for (const id of selectedIds) {
+        await axios.delete(`${API_URL}/api/cars/${id}`, getAuthHeader());
+      }
+      setVehicles(vehicles.filter(v => !selectedIds.includes(v._id)));
+      setSelectedIds([]);
+      setShowBulkDeleteModal(false);
+    } catch (err) {
+      alert("Erreur lors de la suppression groupée");
+    }
+  };
 
   const totalValue = vehicles.reduce((acc, v) => acc + (Number(v.prix) || 0), 0);
   const totalViews = vehicles.reduce((acc, v) => acc + (Number(v.views) || 0), 0);
@@ -121,8 +148,7 @@ const Admin = () => {
       data.append("upload_preset", "boris_auto_preset"); 
       try {
         const res = await fetch(`https://api.cloudinary.com/v1_1/dy06wtnqo/image/upload`, {
-          method: "POST",
-          body: data
+          method: "POST", body: data
         });
         const fileData = await res.json();
         if (fileData.secure_url) {
@@ -134,10 +160,7 @@ const Admin = () => {
   };
 
   const removeImage = (indexToRemove) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.filter((_, index) => index !== indexToRemove)
-    }));
+    setFormData(prev => ({ ...prev, images: prev.images.filter((_, index) => index !== indexToRemove) }));
   };
 
   const handleEdit = (vehicle) => {
@@ -196,19 +219,16 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex font-['Poppins'] text-slate-900">
-      
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col fixed h-full shadow-sm z-50">
         <div className="p-8 flex flex-col items-center border-b border-slate-50">
           <img src="/images/logo.png" alt="Logo" className="w-42 h-auto mb-4" />
           <h1 className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">Administration</h1>
         </div>
-        
         <nav className="flex-1 px-6 space-y-8 mt-6">
           <Link to="/" className="flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-[#184f02] text-white text-[11px] font-bold uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-[#184f02]/20">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
             Retour Site
           </Link>
-
           <div className="space-y-4">
             {[
               { id: 'stats', label: 'Dashboard', icon: <Icons.Dashboard /> },
@@ -216,35 +236,17 @@ const Admin = () => {
               { id: 'assets', label: 'Inventaire', icon: <Icons.Stock /> },
               { id: 'alerts', label: 'Alertes', icon: <Icons.Alerts /> }
             ].map((item) => (
-              <button 
-                key={item.id} 
-                onClick={() => {
-                  if (item.id === 'alerts') {
-                    handleOpenAlerts();
-                  } else {
-                    setActiveMenu(item.id);
-                  }
-                }} 
-                className={`w-full flex items-center justify-between py-3 text-[11px] font-bold uppercase tracking-widest transition-all rounded-xl px-4 ${activeMenu === item.id ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
-              >
-                <div className="flex items-center gap-4">
-                    {item.icon} {item.label}
-                </div>
-                
+              <button key={item.id} onClick={() => item.id === 'alerts' ? handleOpenAlerts() : setActiveMenu(item.id)} className={`w-full flex items-center justify-between py-3 text-[11px] font-bold uppercase tracking-widest transition-all rounded-xl px-4 ${activeMenu === item.id ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
+                <div className="flex items-center gap-4">{item.icon} {item.label}</div>
                 {item.id === 'alerts' && unreadCount > 0 && activeMenu !== 'alerts' && (
-                  <span className="flex h-5 min-w-[20px] px-1 items-center justify-center rounded-full bg-red-600 text-[10px] text-white animate-bounce shadow-lg shadow-red-200">
-                    {unreadCount}
-                  </span>
+                  <span className="flex h-5 min-w-[20px] px-1 items-center justify-center rounded-full bg-red-600 text-[10px] text-white animate-bounce shadow-lg shadow-red-200">{unreadCount}</span>
                 )}
               </button>
             ))}
           </div>
         </nav>
-
         <div className="p-6 border-t border-slate-100">
-          <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 py-3 bg-red-50 text-red-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all">
-            Quitter
-          </button>
+          <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 py-3 bg-red-50 text-red-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all">Quitter</button>
         </div>
       </aside>
 
@@ -252,22 +254,10 @@ const Admin = () => {
         {activeMenu === 'stats' && (
           <div className="space-y-10 animate-in fade-in duration-500">
             <div className="grid grid-cols-4 gap-6">
-              <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between">
-                <div><p className="text-[9px] font-bold text-slate-500 uppercase mb-1">Unités Stock</p><p className="text-2xl font-bold">{vehicles.length}</p></div>
-                <Icons.Box />
-              </div>
-              <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between">
-                <div><p className="text-[9px] font-bold text-slate-500 uppercase mb-1">Valeur Parc</p><p className="text-2xl font-bold text-[#184f02]">{totalValue.toLocaleString()} €</p></div>
-                <Icons.Value />
-              </div>
-              <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between">
-                <div><p className="text-[9px] font-bold text-slate-500 uppercase mb-1">Moyenne / Unité</p><p className="text-2xl font-bold text-blue-600">{Math.round(averagePrice).toLocaleString()} €</p></div>
-                <Icons.Trend />
-              </div>
-              <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between">
-                <div><p className="text-[9px] font-bold text-slate-500 uppercase mb-1">Vues Globales</p><p className="text-2xl font-bold">{totalViews}</p></div>
-                <Icons.Eye />
-              </div>
+              <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between"><div><p className="text-[9px] font-bold text-slate-500 uppercase mb-1">Unités Stock</p><p className="text-2xl font-bold">{vehicles.length}</p></div><Icons.Box /></div>
+              <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between"><div><p className="text-[9px] font-bold text-slate-500 uppercase mb-1">Valeur Parc</p><p className="text-2xl font-bold text-[#184f02]">{totalValue.toLocaleString()} €</p></div><Icons.Value /></div>
+              <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between"><div><p className="text-[9px] font-bold text-slate-500 uppercase mb-1">Moyenne / Unité</p><p className="text-2xl font-bold text-blue-600">{Math.round(averagePrice).toLocaleString()} €</p></div><Icons.Trend /></div>
+              <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between"><div><p className="text-[9px] font-bold text-slate-500 uppercase mb-1">Vues Globales</p><p className="text-2xl font-bold">{totalViews}</p></div><Icons.Eye /></div>
             </div>
 
             <div className="grid grid-cols-3 gap-8">
@@ -280,15 +270,10 @@ const Admin = () => {
                   </div>
                 ) : <p className="text-slate-400 text-[11px]">Aucun véhicule en stock</p>}
               </div>
-
               <div className="col-span-2 bg-white p-8 rounded-xl border border-slate-100 shadow-sm">
                 <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8">Répartition du catalogue</h4>
                 <div className="space-y-8">
-                  {[ 
-                    { label: 'Voitures', stats: statsCars, color: 'bg-slate-900' }, 
-                    { label: 'Camions', stats: statsTrucks, color: 'bg-[#184f02]' }, 
-                    { label: 'Tracteurs', stats: statsTractors, color: 'bg-blue-600' } 
-                  ].map((item, i) => (
+                  {[ { label: 'Voitures', stats: statsCars, color: 'bg-slate-900' }, { label: 'Camions', stats: statsTrucks, color: 'bg-[#184f02]' }, { label: 'Tracteurs', stats: statsTractors, color: 'bg-blue-600' } ].map((item, i) => (
                     <div key={i} className="space-y-2">
                       <div className="flex justify-between items-end"><span className="text-[11px] font-bold uppercase text-slate-700">{item.label}</span><span className="text-[11px] font-black text-slate-900">{item.stats.count} unités ({Math.round(item.stats.percentage)}%)</span></div>
                       <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full ${item.color} transition-all duration-1000 ease-out`} style={{ width: `${item.stats.percentage}%` }}></div></div>
@@ -297,7 +282,6 @@ const Admin = () => {
                 </div>
               </div>
             </div>
-
             <div className="grid grid-cols-3 gap-8">
               {[ { label: 'Voitures', data: statsCars }, { label: 'Camions', data: statsTrucks }, { label: 'Tracteurs', data: statsTractors } ].map((cat, i) => (
                 <div key={i} className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
@@ -391,7 +375,16 @@ const Admin = () => {
                     <button key={cat} onClick={() => setInventoryFilter(cat)} className={`text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-lg transition-all ${inventoryFilter === cat ? 'bg-slate-900 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}>{cat === 'Tous' ? 'Tout' : cat + 's'}</button>
                   ))}
                 </div>
-                <p className="text-[11px] font-bold text-slate-900 uppercase tracking-tight">{filteredVehicles.length} {filteredVehicles.length > 1 ? 'véhicules trouvés' : 'véhicule trouvé'}</p>
+                <div className="flex items-center gap-4">
+                  <p className="text-[11px] font-bold text-slate-900 uppercase tracking-tight">{filteredVehicles.length} {filteredVehicles.length > 1 ? 'véhicules trouvés' : 'véhicule trouvé'}</p>
+                  
+                  {/* BOUTON SUPPRESSION GROUPÉE */}
+                  {selectedIds.length > 0 && (
+                    <button onClick={() => setShowBulkDeleteModal(true)} className="bg-red-600 text-white text-[9px] px-3 py-1.5 rounded-lg font-bold uppercase tracking-widest animate-pulse shadow-lg shadow-red-200">
+                      Supprimer la sélection ({selectedIds.length})
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="relative w-80">
                 <div className="absolute inset-y-0 left-4 flex items-center text-slate-400"><Icons.Search /></div>
@@ -403,14 +396,33 @@ const Admin = () => {
                 )}
               </div>
             </div>
+
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
               <table className="w-full text-left">
                 <thead className="bg-slate-50 text-[9px] font-bold text-slate-600 uppercase tracking-widest border-b border-slate-100">
-                  <tr><th className="p-6">Asset & ID</th><th className="p-6 text-center">Catégorie</th><th className="p-6 text-center">Vues</th><th className="p-6 text-right">Actions</th></tr>
+                  <tr>
+                    <th className="p-6 w-10">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedIds.length === filteredVehicles.length && filteredVehicles.length > 0}
+                        onChange={handleSelectAll}
+                        className="rounded border-slate-300 text-[#184f02] focus:ring-[#184f02]"
+                      />
+                    </th>
+                    <th className="p-6">Asset & ID</th><th className="p-6 text-center">Catégorie</th><th className="p-6 text-center">Vues</th><th className="p-6 text-right">Actions</th>
+                  </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-[12px]">
                   {filteredVehicles.map((v) => (
-                    <tr key={v._id} className="hover:bg-slate-50/50 transition-colors">
+                    <tr key={v._id} className={`hover:bg-slate-50/50 transition-colors ${selectedIds.includes(v._id) ? 'bg-slate-50' : ''}`}>
+                      <td className="p-6">
+                        <input 
+                          type="checkbox" 
+                          checked={selectedIds.includes(v._id)}
+                          onChange={() => handleSelectOne(v._id)}
+                          className="rounded border-slate-300 text-[#184f02] focus:ring-[#184f02]"
+                        />
+                      </td>
                       <td className="p-6 flex items-center gap-6">
                         <img src={v.images[0]} className="w-12 h-10 object-cover rounded shadow-sm bg-slate-100" alt="" />
                         <div><p className="font-bold text-slate-900 uppercase">{v.marque} {v.modele}</p><p className="text-[9px] text-slate-500 font-mono">ID: {v._id}</p><p className="text-[10px] text-[#184f02] font-bold">{Number(v.prix).toLocaleString()} €</p></div>
@@ -431,7 +443,24 @@ const Admin = () => {
         )}
       </main>
 
-      {/* --- MODAUX --- */}
+      {/* MODAL SUPPRESSION MULTIPLE */}
+      {showBulkDeleteModal && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl border border-slate-100 text-center animate-in zoom-in duration-200">
+            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+            </div>
+            <h3 className="text-md font-bold text-slate-900 uppercase tracking-wider mb-2">Supprimer la sélection ?</h3>
+            <p className="text-[11px] text-slate-500 mb-8 font-medium">Vous allez retirer {selectedIds.length} publications de l'inventaire Emile Auto. Cette action est irréversible.</p>
+            <div className="flex gap-3">
+              <button onClick={() => setShowBulkDeleteModal(false)} className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold text-[10px] uppercase tracking-widest">Annuler</button>
+              <button onClick={confirmBulkDelete} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-red-100">Confirmer</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AUTRES MODAUX (RÉTABLIS À L'IDENTIQUE) */}
       {showSuccessModal && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl border border-slate-100">
@@ -448,8 +477,8 @@ const Admin = () => {
       {showDeleteModal.show && (
         <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           <div className="bg-white rounded-xl p-8 max-w-sm w-full shadow-2xl border border-slate-100">
-            <h3 className="text-md font-bold text-slate-900 mb-6 uppercase">Confirmer le retrait ?</h3>
-            <div className="flex gap-4">
+            <h3 className="text-md font-bold text-slate-900 mb-6 uppercase tracking-wider text-center">Confirmer le retrait ?</h3>
+            <div className="flex gap-4 mt-6">
               <button onClick={() => setShowDeleteModal({ show: false, id: null })} className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-lg font-bold text-[11px] uppercase">Annuler</button>
               <button onClick={confirmDelete} className="flex-1 py-3 bg-red-600 text-white rounded-lg font-bold text-[11px] uppercase shadow-lg shadow-red-200">Confirmer</button>
             </div>
