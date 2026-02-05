@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import axios from 'axios';
 
 // Importation de tes composants
@@ -10,6 +10,7 @@ import Admin from './pages/Admin';
 import Login from './pages/login';
 
 // --- CONFIGURATION DE L'API ---
+// Cette ligne récupère l'URL de ton backend Render configurée dans Vercel
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 // --- COMPOSANT : PROTECTION DES ROUTES ---
@@ -21,12 +22,11 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// --- COMPOSANT : BOUTON WHATSAPP ---
+// --- COMPOSANT : BOUTON WHATSAPP MODERNE ---
 const FloatingWhatsApp = () => {
   const location = useLocation();
   
-  // Cache le bouton sur Admin et Login
-  const hideWhatsApp = location.pathname.toLowerCase().startsWith('/admin') || location.pathname === '/login';
+  const hideWhatsApp = location.pathname.startsWith('/Admin') || location.pathname === '/login';
   
   if (hideWhatsApp) return null;
 
@@ -38,12 +38,13 @@ const FloatingWhatsApp = () => {
 
     let provenance = "Page d'accueil";
     if (location.pathname.startsWith('/Car/')) {
-      provenance = "Fiche Véhicule";
+      provenance = document.title.replace(" | Emile Auto", "") || "Fiche Véhicule";
     } else if (location.pathname === '/Catalogue') {
       provenance = "Catalogue Complet";
     }
 
     try {
+      // ✅ Correction : Utilisation de API_URL au lieu de localhost
       await axios.post(`${API_URL}/api/notifications/add`, {
         page: provenance 
       });
@@ -60,7 +61,7 @@ const FloatingWhatsApp = () => {
       className="fixed bottom-8 right-8 z-[100] flex items-center group bg-transparent border-none p-0 outline-none cursor-pointer"
     >
       <span className="absolute inline-flex h-full w-full rounded-full bg-[#25D366] opacity-20 animate-ping"></span>
-      <div className="relative bg-[#25D366] text-white p-4 rounded-2xl shadow-lg hover:scale-110 transition-all duration-300 flex items-center">
+      <div className="relative bg-[#25D366] text-white p-4 rounded-2xl shadow-[0_10px_30px_rgba(37,211,102,0.3)] hover:scale-110 transition-all duration-300 flex items-center">
         <span className="max-w-0 overflow-hidden group-hover:max-w-xs group-hover:ml-3 transition-all duration-500 font-bold text-[11px] uppercase tracking-[0.2em] whitespace-nowrap">
           Conseiller en ligne
         </span>
@@ -72,17 +73,47 @@ const FloatingWhatsApp = () => {
   );
 };
 
+// --- COMPOSANT : NAVBAR EMILE AUTO ---
+const Navbar = () => {
+  const location = useLocation();
+  const hideNavbar = location.pathname.startsWith('/Admin') || location.pathname === '/login';
+  
+  if (hideNavbar) return null;
+
+  return (
+    <nav className="bg-white/90 backdrop-blur-md border-b border-slate-100 sticky top-0 z-[90]">
+      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2 group">
+          <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-black text-xs group-hover:bg-amber-600 transition-colors">E</div>
+          <span className="text-xl font-black tracking-tighter uppercase text-slate-900">
+            Emile <span className="text-amber-600">Auto</span>
+          </span>
+        </Link>
+        
+        <div className="hidden md:flex gap-10 items-center">
+          <Link to="/" className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 transition-colors">Accueil</Link>
+          <Link to="/Catalogue" className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 transition-colors">Inventaire</Link>
+          <Link to="/Admin" className="px-5 py-2 bg-slate-50 text-slate-900 rounded-full text-[9px] font-black uppercase tracking-widest border border-slate-200 hover:bg-slate-900 hover:text-white transition-all">Espace Admin</Link>
+        </div>
+      </div>
+    </nav>
+  );
+};
+
 // --- CONFIGURATION PRINCIPALE ---
 function App() {
   return (
     <Router>
       <div className="relative min-h-screen selection:bg-amber-100 selection:text-amber-900">
+        <Navbar />
+        
         <Routes>
           <Route index element={<Home />} />
           <Route path="/" element={<Home />} />
           <Route path="/Catalogue" element={<Catalogue />} />
           <Route path="/Car/:id" element={<CarDetail />} />
           <Route path="/login" element={<Login />} />
+          
           <Route 
             path="/admin/*" 
             element={
@@ -91,8 +122,10 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          
           <Route path="*" element={<Home />} />
         </Routes>
+
         <FloatingWhatsApp />
       </div>
     </Router>
