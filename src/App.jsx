@@ -23,7 +23,7 @@ const FloatingWhatsApp = () => {
   const location = useLocation();
   
   // Ne pas afficher le bouton sur l'admin ou le login
-  const hideWhatsApp = location.pathname.startsWith('/admin') || location.pathname === '/login';
+  const hideWhatsApp = location.pathname.startsWith('/Admin') || location.pathname === '/login';
   
   if (hideWhatsApp) return null;
 
@@ -35,11 +35,11 @@ const FloatingWhatsApp = () => {
 
     // --- LOGIQUE DE PROVENANCE AMÉLIORÉE ---
     let provenance = "Page d'accueil";
-    if (location.pathname.startsWith('/car/')) {
+    if (location.pathname.startsWith('/Car/')) {
       // Si on est sur une fiche, on essaie de récupérer le nom via le titre de la page
       // (CarDetail met généralement à jour document.title)
       provenance = document.title.replace(" | Emile Auto", "") || "Fiche Véhicule";
-    } else if (location.pathname === '/catalogue') {
+    } else if (location.pathname === '/Catalogue') {
       provenance = "Catalogue Complet";
     }
 
@@ -77,7 +77,7 @@ const FloatingWhatsApp = () => {
 // --- COMPOSANT : NAVBAR EMILE AUTO ---
 const Navbar = () => {
   const location = useLocation();
-  const hideNavbar = location.pathname.startsWith('/admin') || location.pathname === '/login';
+  const hideNavbar = location.pathname.startsWith('/Admin') || location.pathname === '/login';
   
   if (hideNavbar) return null;
 
@@ -111,8 +111,8 @@ function App() {
         <Routes>
           <Route index element={<Home />} />
           <Route path="/" element={<Home />} />
-          <Route path="/catalogue" element={<Catalogue />} />
-          <Route path="/car/:id" element={<CarDetail />} />
+          <Route path="/Catalogue" element={<Catalogue />} />
+          <Route path="/Car/:id" element={<CarDetail />} />
           <Route path="/login" element={<Login />} />
           
           <Route 
