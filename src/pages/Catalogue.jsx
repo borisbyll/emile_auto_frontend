@@ -30,8 +30,8 @@ const Catalog = () => {
 useEffect(() => {
     const fetchVehicles = async () => {
       try {
-        // CORRECTION : On enlève "/${id}" car on veut TOUT le catalogue
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/cars)`);
+        // CORRECTION : On retire la parenthèse qui était coincée à la fin de l'URL
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/cars`);
         setVehicles(res.data);
         setFilteredVehicles(res.data);
       } catch (err) {
