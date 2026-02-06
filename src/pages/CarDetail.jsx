@@ -33,7 +33,6 @@ const CarDetail = () => {
     getData();
   }, [id]);
 
-  // Fonctions de navigation pour les flèches
   const nextImg = () => {
     setActiveImg((prev) => (prev + 1 === car.images.length ? 0 : prev + 1));
   };
@@ -75,12 +74,13 @@ const CarDetail = () => {
         </div>
       </nav>
 
-      {/* pt-24 pour réduire l'espace sous la navbar */}
-      <div className="max-w-7xl mx-auto px-6 pt-24">
+      {/* pt-16 : Espace réduit au maximum sous la navbar */}
+      <div className="max-w-7xl mx-auto px-6 pt-16">
 
+        {/* mb-4 : Marge réduite pour remonter le contenu */}
         <button 
           onClick={() => navigate(-1)} 
-          className="mb-8 flex items-center gap-2 text-slate-400 hover:text-slate-900 transition-all group"
+          className="mb-4 flex items-center gap-2 text-slate-400 hover:text-slate-900 transition-all group"
         >
           <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-slate-100 transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -92,10 +92,8 @@ const CarDetail = () => {
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-24 items-start">
           <div>
-            {/* Conteneur image avec flèches de navigation */}
             <div className="relative group/slider bg-slate-50 rounded-[2.5rem] p-6 flex items-center justify-center min-h-[400px] border border-slate-100 overflow-hidden shadow-inner">
               
-              {/* Flèche Gauche */}
               <button 
                 onClick={prevImg}
                 className="absolute left-4 z-10 p-3 rounded-full bg-white/80 backdrop-blur-sm text-slate-900 shadow-lg opacity-0 group-hover/slider:opacity-100 transition-opacity hover:bg-[#184f02] hover:text-white"
@@ -107,7 +105,6 @@ const CarDetail = () => {
 
               <img src={car.images[activeImg]} className="max-w-full max-h-[450px] w-auto h-auto object-contain transition-all duration-500" alt={car.modele} />
 
-              {/* Flèche Droite */}
               <button 
                 onClick={nextImg}
                 className="absolute right-4 z-10 p-3 rounded-full bg-white/80 backdrop-blur-sm text-slate-900 shadow-lg opacity-0 group-hover/slider:opacity-100 transition-opacity hover:bg-[#184f02] hover:text-white"
