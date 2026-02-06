@@ -24,7 +24,7 @@ const Layout = ({ children }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-20 items-center">
             <Link to="/" className="flex items-center">
-              <img src="/images/logo.png" alt="Emile Auto" className="h-14 w-auto" />
+              <img src="/images/logo.png" alt="Emile Auto" className="h-16 w-auto" />
             </Link>
             
             {/* Menu Desktop */}
