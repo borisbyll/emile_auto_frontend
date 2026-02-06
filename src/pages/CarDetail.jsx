@@ -134,7 +134,7 @@ const CarDetail = () => {
           <div>
             <span className="text-[#184f02] font-bold uppercase text-[10px] tracking-[0.3em] mb-2 block">{car.marque}</span>
             <h1 className="text-4xl font-black text-slate-900 uppercase mb-4 leading-tight">{car.modele}</h1>
-            <p className="text-2xl font-black text-slate-900 mb-8">{car.prix?.toLocaleString()} CFA</p>
+            <p className="text-2xl font-black text-slate-900 mb-8">{car.prix?.toLocaleString()} €</p>
             
             <div className="grid grid-cols-2 gap-4 mb-8">
               <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
@@ -197,7 +197,7 @@ const CarDetail = () => {
                 <div className="relative bg-[#F8FAFC] rounded-[2.5rem] h-64 flex items-center justify-center p-8 border border-slate-100 overflow-hidden transition-all duration-500 group-hover:shadow-2xl group-hover:border-green-100">
                   <img src={c.images[0]} className="max-w-full max-h-full object-contain transition-transform duration-700 group-hover:scale-110" alt={c.modele} />
                   <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-2xl shadow-sm">
-                    <p className="text-[11px] font-black text-slate-900">{c.prix?.toLocaleString()} CFA</p>
+                    <p className="text-[11px] font-black text-slate-900">{c.prix?.toLocaleString()} €</p>
                   </div>
                 </div>
 
