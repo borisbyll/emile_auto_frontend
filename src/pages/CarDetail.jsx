@@ -1,22 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link, useLocation, useNavigate } from 'react-router-dom'; // useNavigate ajouté
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import emailjs from '@emailjs/browser';
 
 const CarDetail = () => {
   const { id } = useParams();
   const { pathname } = useLocation();
-  const navigate = useNavigate(); // Hook pour le retour en arrière
+  const navigate = useNavigate();
   const [car, setCar] = useState(null);
   const [others, setOthers] = useState([]);
   const [activeImg, setActiveImg] = useState(0);
 
-  // États pour le formulaire
   const [showModal, setShowModal] = useState(false);
   const [status, setStatus] = useState("");
   const form = useRef();
 
-  // Force le retour en haut de page au changement d'un véhicule
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id, pathname]);
@@ -34,6 +32,15 @@ const CarDetail = () => {
     };
     getData();
   }, [id]);
+
+  // Fonctions de navigation pour les flèches
+  const nextImg = () => {
+    setActiveImg((prev) => (prev + 1 === car.images.length ? 0 : prev + 1));
+  };
+
+  const prevImg = () => {
+    setActiveImg((prev) => (prev === 0 ? car.images.length - 1 : prev - 1));
+  };
 
   const sendEmail = (e) => {
     e.preventDefault();
@@ -53,7 +60,6 @@ const CarDetail = () => {
   return (
     <div className="min-h-screen bg-white pb-20 font-['Poppins']">
       
-      {/* NAVBAR STANDARD EMILE AUTO */}
       <nav className="fixed top-0 w-full z-[100] px-6 py-4 flex justify-between items-center bg-white/80 backdrop-blur-md border-b border-slate-100">
         <div className="flex items-center">
           <Link to="/">
@@ -62,29 +68,16 @@ const CarDetail = () => {
         </div>
         
         <div className="hidden md:flex items-center gap-8">
-          <Link to="/" className="text-[11px] font-bold uppercase tracking-widest text-slate-900 hover:text-[#184f02] transition-colors">
-            Accueil
-          </Link>
-          <Link to="/Catalogue" className="text-[11px] font-bold uppercase tracking-widest text-slate-900 hover:text-[#184f02] transition-colors">
-            Catalogue
-          </Link>
-          <a href="/#propos" className="text-[11px] font-bold uppercase tracking-widest text-slate-900 hover:text-[#184f02] transition-colors">
-            À Propos
-          </a>
-          <a 
-            href="https://wa.me/22899794772" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="text-[11px] font-bold uppercase tracking-widest text-slate-900 hover:text-[#184f02]"
-          >
-            Contact
-          </a>
+          <Link to="/" className="text-[11px] font-bold uppercase tracking-widest text-slate-900 hover:text-[#184f02] transition-colors">Accueil</Link>
+          <Link to="/Catalogue" className="text-[11px] font-bold uppercase tracking-widest text-slate-900 hover:text-[#184f02] transition-colors">Catalogue</Link>
+          <a href="/#propos" className="text-[11px] font-bold uppercase tracking-widest text-slate-900 hover:text-[#184f02] transition-colors">À Propos</a>
+          <a href="https://wa.me/22899794772" target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold uppercase tracking-widest text-slate-900 hover:text-[#184f02]">Contact</a>
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-6 pt-32">
+      {/* pt-24 pour réduire l'espace sous la navbar */}
+      <div className="max-w-7xl mx-auto px-6 pt-24">
 
-        {/* --- BOUTON RETOUR --- */}
         <button 
           onClick={() => navigate(-1)} 
           className="mb-8 flex items-center gap-2 text-slate-400 hover:text-slate-900 transition-all group"
@@ -97,12 +90,34 @@ const CarDetail = () => {
           <span className="text-[10px] font-black uppercase tracking-[0.2em]">Retour</span>
         </button>
         
-        {/* --- SECTION DÉTAILS PRINCIPAUX --- */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-24 items-start">
           <div>
-            <div className="bg-slate-50 rounded-[2.5rem] p-6 flex items-center justify-center min-h-[400px] border border-slate-100 overflow-hidden shadow-inner">
+            {/* Conteneur image avec flèches de navigation */}
+            <div className="relative group/slider bg-slate-50 rounded-[2.5rem] p-6 flex items-center justify-center min-h-[400px] border border-slate-100 overflow-hidden shadow-inner">
+              
+              {/* Flèche Gauche */}
+              <button 
+                onClick={prevImg}
+                className="absolute left-4 z-10 p-3 rounded-full bg-white/80 backdrop-blur-sm text-slate-900 shadow-lg opacity-0 group-hover/slider:opacity-100 transition-opacity hover:bg-[#184f02] hover:text-white"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
               <img src={car.images[activeImg]} className="max-w-full max-h-[450px] w-auto h-auto object-contain transition-all duration-500" alt={car.modele} />
+
+              {/* Flèche Droite */}
+              <button 
+                onClick={nextImg}
+                className="absolute right-4 z-10 p-3 rounded-full bg-white/80 backdrop-blur-sm text-slate-900 shadow-lg opacity-0 group-hover/slider:opacity-100 transition-opacity hover:bg-[#184f02] hover:text-white"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
+
             <div className="flex gap-3 mt-4 overflow-x-auto pb-2">
               {car.images.map((img, i) => (
                 <img key={i} src={img} onClick={() => setActiveImg(i)} 
@@ -159,7 +174,6 @@ const CarDetail = () => {
           </div>
         </div>
 
-        {/* --- SECTION SUGGESTIONS --- */}
         <div className="border-t border-slate-100 pt-16">
           <div className="flex justify-between items-center mb-12">
             <h3 className="text-2xl font-black uppercase tracking-tighter text-slate-900">
@@ -201,7 +215,6 @@ const CarDetail = () => {
         </div>
       </div>
 
-      {/* --- MODAL DE CONTACT --- */}
       {showModal && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-md">
           <div className="bg-white w-full max-w-lg rounded-[2.5rem] p-10 relative shadow-2xl">
