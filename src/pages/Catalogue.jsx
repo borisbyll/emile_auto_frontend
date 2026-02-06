@@ -184,7 +184,7 @@ const Catalog = () => {
 
               <div className="flex items-end gap-2">
                 <button type="button" onClick={resetFilters} className="flex-1 p-2.5 border border-slate-100 rounded-xl font-bold text-[9px] uppercase text-slate-400 hover:bg-slate-50 transition-all">Vider</button>
-                <button type="submit" className="flex-[2] p-2.5 bg-[#184f02] text-white rounded-xl font-bold text-[9px] uppercase tracking-widest hover:bg-slate-900 transition-all shadow-lg">Lancer</button>
+                <button type="submit" className="flex-[2] p-2.5 bg-[#184f02] text-white rounded-xl font-bold text-[9px] uppercase tracking-widest hover:bg-slate-900 transition-all shadow-lg">Rechercher</button>
               </div>
             </div>
           </form>
