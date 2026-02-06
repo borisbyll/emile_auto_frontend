@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link, useLocation } from 'react-router-dom';
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom'; // useNavigate ajouté
 import axios from 'axios';
 import emailjs from '@emailjs/browser';
 
 const CarDetail = () => {
   const { id } = useParams();
   const { pathname } = useLocation();
+  const navigate = useNavigate(); // Hook pour le retour en arrière
   const [car, setCar] = useState(null);
   const [others, setOthers] = useState([]);
   const [activeImg, setActiveImg] = useState(0);
@@ -82,6 +83,19 @@ const CarDetail = () => {
       </nav>
 
       <div className="max-w-7xl mx-auto px-6 pt-32">
+
+        {/* --- BOUTON RETOUR --- */}
+        <button 
+          onClick={() => navigate(-1)} 
+          className="mb-8 flex items-center gap-2 text-slate-400 hover:text-slate-900 transition-all group"
+        >
+          <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-slate-100 transition-colors">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
+            </svg>
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em]">Retour</span>
+        </button>
         
         {/* --- SECTION DÉTAILS PRINCIPAUX --- */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-24 items-start">
@@ -101,9 +115,8 @@ const CarDetail = () => {
           <div>
             <span className="text-[#184f02] font-bold uppercase text-[10px] tracking-[0.3em] mb-2 block">{car.marque}</span>
             <h1 className="text-4xl font-black text-slate-900 uppercase mb-4 leading-tight">{car.modele}</h1>
-            <p className="text-2xl font-black text-slate-900 mb-8">{car.prix?.toLocaleString()} €</p>
+            <p className="text-2xl font-black text-slate-900 mb-8">{car.prix?.toLocaleString()} CFA</p>
             
-            {/* GRILLE DES CARACTÉRISTIQUES (5 BLOCS - ÉTAT RETIRÉ) */}
             <div className="grid grid-cols-2 gap-4 mb-8">
               <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
                 <p className="text-[8px] uppercase font-bold text-slate-400 mb-1">Kilométrage</p>
@@ -129,7 +142,6 @@ const CarDetail = () => {
 
             <div className="mb-10">
               <h4 className="text-[10px] font-black uppercase mb-3 underline decoration-[#184f02] underline-offset-4 tracking-widest">Description</h4>
-              {/* Utilisation de whitespace-pre-wrap pour forcer les retours à la ligne */}
               <p className="text-[13px] text-slate-500 leading-relaxed font-light whitespace-pre-wrap break-words">
                 {car.description}
               </p>
@@ -167,7 +179,7 @@ const CarDetail = () => {
                 <div className="relative bg-[#F8FAFC] rounded-[2.5rem] h-64 flex items-center justify-center p-8 border border-slate-100 overflow-hidden transition-all duration-500 group-hover:shadow-2xl group-hover:border-green-100">
                   <img src={c.images[0]} className="max-w-full max-h-full object-contain transition-transform duration-700 group-hover:scale-110" alt={c.modele} />
                   <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-2xl shadow-sm">
-                    <p className="text-[11px] font-black text-slate-900">{c.prix?.toLocaleString()} €</p>
+                    <p className="text-[11px] font-black text-slate-900">{c.prix?.toLocaleString()} CFA</p>
                   </div>
                 </div>
 

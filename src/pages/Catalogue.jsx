@@ -100,16 +100,16 @@ const Catalog = () => {
         </div>
       </nav>
 
-      {/* HEADER - RÉDUIT AU MAXIMUM */}
-      <div className="bg-slate-900 pt-24 pb-10 px-6 text-center">
-        <h1 className="text-2xl font-bold text-white uppercase tracking-[0.2em]">
+      {/* HEADER - REMONTÉ ET AGRANDI */}
+      <div className="bg-slate-900 pt-20 pb-12 px-6 text-center">
+        <h1 className="text-4xl font-black text-white uppercase tracking-[0.2em]">
           Stock <span className="text-[#184f02]">Emile Auto</span>
         </h1>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 -mt-12 relative z-10">
-        {/* BOUTON DE CONTRÔLE */}
-        <div className="flex justify-center mb-6">
+        {/* BOUTON DE CONTRÔLE - DÉPLACÉ À GAUCHE */}
+        <div className="flex justify-start mb-6">
           <button 
             onClick={() => {
                 setIsFilterVisible(!isFilterVisible);
