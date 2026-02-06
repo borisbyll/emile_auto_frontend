@@ -67,7 +67,7 @@ const CarDetail = () => {
       <nav className="fixed top-0 w-full z-[100] px-6 py-4 flex justify-between items-center bg-white/80 backdrop-blur-md border-b border-slate-100">
         <div className="flex items-center">
           <Link to="/">
-            <img src="/images/logo.png" alt="Emile Auto Logo" className="h-16 w-auto" />
+            <img src="/images/logo.png" alt="Emile Auto Logo" className="h-14 w-auto" />
           </Link>
         </div>
         
