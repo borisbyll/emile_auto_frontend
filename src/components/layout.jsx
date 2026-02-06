@@ -6,7 +6,6 @@ const Layout = ({ children }) => {
   const location = useLocation();
 
   // 1. DÉTECTION DES PAGES À EXCLURE (ADMIN & LOGIN)
-  // On vérifie si l'URL commence par /admin ou est exactement /login
   const isControlPanel = location.pathname.toLowerCase().startsWith('/admin') || 
                          location.pathname.toLowerCase() === '/login';
 
@@ -20,15 +19,15 @@ const Layout = ({ children }) => {
 
   return (
     <div className="min-h-screen flex flex-col font-['Poppins'] bg-white">
-      {/* NAVBAR CLIENT (SANS LIEN ADMIN) */}
-      <nav className="bg-white border-b border-slate-100 sticky top-0 z-[100]">
+      {/* NAVBAR CLIENT */}
+      <nav className="bg-white border-b border-slate-100 sticky top-0 z-[100] w-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-20 items-center">
             <Link to="/" className="flex items-center">
               <img src="/images/logo.png" alt="Emile Auto" className="h-10 w-auto" />
             </Link>
             
-            {/* Menu Desktop Professionnel */}
+            {/* Menu Desktop */}
             <div className="hidden md:flex items-center space-x-10 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-600">
               <Link to="/" className={`hover:text-[#184f02] transition-colors ${location.pathname === '/' ? 'text-[#184f02]' : ''}`}>
                 Accueil
@@ -41,26 +40,54 @@ const Layout = ({ children }) => {
               </Link>
             </div>
 
-            {/* Menu Mobile */}
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 text-slate-900">
+            {/* Menu Mobile (Bouton Croissant) */}
+            <button 
+              onClick={() => setIsMenuOpen(!isMenuOpen)} 
+              className="md:hidden p-2 text-slate-900 focus:outline-none"
+              aria-label="Toggle menu"
+            >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={isMenuOpen ? "M6 18L18 6" : "M4 6h16M4 12h16m-7 6h7"} />
+                {isMenuOpen ? (
+                  /* Icône Croix quand ouvert */
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  /* Icône Hamburger quand fermé */
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" />
+                )}
               </svg>
             </button>
           </div>
         </div>
 
-        {/* Dropdown Mobile (Sans lien admin) */}
+        {/* Dropdown Mobile - Amélioré avec une animation simple */}
         {isMenuOpen && (
-          <div className="md:hidden bg-white border-t border-slate-50 p-6 space-y-6 shadow-2xl">
-            <Link to="/" onClick={() => setIsMenuOpen(false)} className="block text-[13px] font-bold uppercase tracking-widest">Accueil</Link>
-            <Link to="/Catalogue" onClick={() => setIsMenuOpen(false)} className="block text-[13px] font-bold uppercase tracking-widest">Catalogue</Link>
-            <Link to="/contact" onClick={() => setIsMenuOpen(false)} className="block text-[13px] font-bold uppercase tracking-widest text-[#184f02]">Contact</Link>
+          <div className="md:hidden bg-white border-t border-slate-50 absolute top-20 left-0 w-full p-6 space-y-6 shadow-2xl z-[90] animate-in slide-in-from-top duration-200">
+            <Link 
+                to="/" 
+                onClick={() => setIsMenuOpen(false)} 
+                className={`block text-[13px] font-bold uppercase tracking-widest ${location.pathname === '/' ? 'text-[#184f02]' : 'text-slate-600'}`}
+            >
+                Accueil
+            </Link>
+            <Link 
+                to="/Catalogue" 
+                onClick={() => setIsMenuOpen(false)} 
+                className={`block text-[13px] font-bold uppercase tracking-widest ${location.pathname === '/Catalogue' ? 'text-[#184f02]' : 'text-slate-600'}`}
+            >
+                Catalogue
+            </Link>
+            <Link 
+                to="/contact" 
+                onClick={() => setIsMenuOpen(false)} 
+                className="block text-[13px] font-bold uppercase tracking-widest text-[#184f02]"
+            >
+                Contact
+            </Link>
           </div>
         )}
       </nav>
 
-      {/* FIL D'ARIANE DYNAMIQUE POUR CARDETAIL */}
+      {/* FIL D'ARIANE (CARDETAIL) */}
       {isCarDetail && (
         <div className="bg-slate-50 border-b border-slate-100 py-3">
           <div className="max-w-7xl mx-auto px-4 flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-slate-400">
@@ -78,7 +105,7 @@ const Layout = ({ children }) => {
         {children}
       </main>
 
-      {/* FOOTER (SANS LIEN ADMIN) */}
+      {/* FOOTER */}
       <footer className="bg-slate-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <img src="/images/logo.png" alt="Emile Auto" className="h-6 w-auto mx-auto mb-6 brightness-0 invert opacity-50" />
