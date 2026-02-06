@@ -24,7 +24,7 @@ const Layout = ({ children }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-20 items-center">
             <Link to="/" className="flex items-center">
-              <img src="/images/logo.png" alt="Emile Auto" className="h-10 w-auto" />
+              <img src="/images/logo.png" alt="Emile Auto" className="h-14 w-auto" />
             </Link>
             
             {/* Menu Desktop */}
@@ -106,7 +106,7 @@ const Layout = ({ children }) => {
       {/* FOOTER */}
       <footer className="bg-slate-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <img src="/images/logo.png" alt="Emile Auto" className="h-6 w-auto mx-auto mb-6 brightness-0 invert opacity-50" />
+          <img src="/images/logo.png" alt="Emile Auto" className="h-12 w-auto mx-auto mb-6 brightness-0 invert opacity-50" />
           <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.4em]">
             © 2026 Emile Auto — Qualité et Expertise Automobile
           </p>
