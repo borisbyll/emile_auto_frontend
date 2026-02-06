@@ -27,10 +27,10 @@ const Catalog = () => {
     anneeMin: '',
     motorisation: 'Tous'
   });
-useEffect(() => {
+
+  useEffect(() => {
     const fetchVehicles = async () => {
       try {
-        // CORRECTION : On retire la parenthèse qui était coincée à la fin de l'URL
         const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/cars`);
         setVehicles(res.data);
         setFilteredVehicles(res.data);
@@ -103,29 +103,22 @@ useEffect(() => {
           <Link to="/Catalogue" className="text-[11px] font-bold uppercase tracking-widest text-[#184f02] transition-colors">
             Catalogue
           </Link>
-          
-          {/* LIEN CORRIGÉ : On utilise une ancre standard pour forcer le retour à la Home */}
           <a href="/#propos" className="text-[11px] font-bold uppercase tracking-widest text-slate-900 hover:text-[#184f02] transition-colors">
             À Propos
           </a>
-
-          <a 
-            href="https://wa.me/22899794772" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="text-[11px] font-bold uppercase tracking-widest text-slate-900 hover:text-[#184f02]"
-          >
+          <a href="https://wa.me/22899794772" target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold uppercase tracking-widest text-slate-900 hover:text-[#184f02]">
             Contact
           </a>
         </div>
       </nav>
 
-      <div className="bg-slate-900 pt-32 pb-16 px-6 text-center">
+      {/* HEADER - RÉDUIT POUR REMONTER LE CONTENU */}
+      <div className="bg-slate-900 pt-28 pb-12 px-6 text-center">
         <h1 className="text-3xl font-bold text-white uppercase tracking-[0.3em]">Stock <span className="text-[#184f02]">Emile Auto</span></h1>
       </div>
 
-      {/* FORMULAIRE DE FILTRE */}
-      <div className="max-w-7xl mx-auto px-6 -mt-12">
+      {/* FORMULAIRE DE FILTRE - REMONTÉ AVEC -MT-20 */}
+      <div className="max-w-7xl mx-auto px-6 -mt-20">
         <form onSubmit={handleSearch} className="bg-white p-8 rounded-2xl shadow-2xl border border-slate-100 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             
@@ -190,8 +183,8 @@ useEffect(() => {
         </form>
       </div>
 
-      {/* RÉSULTATS AVEC PAGINATION */}
-      <div className="max-w-7xl mx-auto px-6 py-20">
+      {/* RÉSULTATS AVEC PAGINATION - PADDING RÉDUIT POUR REMONTER LES CARTES */}
+      <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
           {currentVehicles.map((car) => <Card key={car._id} car={car} />)}
         </div>
